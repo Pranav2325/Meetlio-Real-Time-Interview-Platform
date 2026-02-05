@@ -2,25 +2,30 @@ import express from "express";
 import { ENV } from "./lib/env.js";
 import path from "path";
 import { connectDB } from "./lib/db.js";
-import cors from "cors"
-import {serve} from "inngest/express"
+import cors from "cors";
+import { serve } from "inngest/express";
 import { functions, inngest } from "./lib/inngest.js";
+import { clerkMiddleware } from "@clerk/express";
+import { protectRoute } from "./middlewares/protectRoute.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
 const __dirname = path.resolve();
 //middlewares
-app.use(express.json())
-app.use(cors({origin:ENV.CLIENT_URL,credentials:true}))
+app.use(express.json());
+app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+app.use(clerkMiddleware());
 
-app.use("/api/inngest",serve({client:inngest,functions}))
+app.use("/api/inngest", serve({ client: inngest, functions }));
+
+app.use("/api/chat",chatRoutes)
+
 
 app.get("/", (req, res) => {
   res.status(200).json({ msg: "success from backend" });
 });
-app.get("/books", (req, res) => {
-  res.status(200).json({ msg: "book endpoint" });
-});
+
 //make app ready for deploy
 if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
@@ -34,11 +39,9 @@ const startServer = async () => {
     await connectDB();
     app.listen(ENV.PORT, () => {
       console.log("server running on port: ", ENV.PORT);
-      
     });
   } catch (error) {
-    console.error("Error starting the server",error)
+    console.error("Error starting the server", error);
   }
 };
 startServer();
-
