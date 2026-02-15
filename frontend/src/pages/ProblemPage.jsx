@@ -28,28 +28,41 @@ const ProblemPage = () => {
   }, [id, selectedLanguage]);
 
   const handleLanguageChange = (e) => {};
-  const handleProblemChange = () => {};
+  const handleProblemChange = (newProblemId) => {
+    navigate(`/problem/${newProblemId}`);
+  };
   const triggerConfetti = () => {};
   const checkIfTestsPassed = () => {};
   const handleRunCode = () => {};
   return (
-    <div className="h-screen w-screen bg-base-100 flex flex-col ">
+    <div className="h-screen  bg-base-100 flex flex-col ">
       <NavBar />
       <div className="flex-1">
         <PanelGroup direction="horizontal">
           {/* left problem desc */}
           <Panel defaultSize={30} minSize={30}>
-            <ProblemDescription />
+            <ProblemDescription
+              problem={currentProblem}
+              onProblemChange={handleProblemChange}
+              allProblems={Object.values(PROBLEMS)}
+            />
           </Panel>
 
           <PanelResizeHandle className="w-2 bg-base-300 hover:bg-primary transition-colors cursor-col-resize" />
-          
+
           {/* right code editor */}
           <Panel defaultSize={30} minSize={30}>
             <PanelGroup direction="vertical">
               {/* top panel */}
               <Panel defaultSize={70} minSize={30}>
-                <CodeEditor />
+                <CodeEditor
+                  selectedLanguage={selectedLanguage}
+                  code={code}
+                  isRunning={isRunning}
+                  onLanguageChange={handleLanguageChange}
+                  onChangeCode={setCode}
+                  onRunCode={handleRunCode}
+                />
               </Panel>
               <PanelResizeHandle className="h-2 bg-base-300 hover:bg-primary transition-colors cursor-row-resize" />
               {/* bottom pannel */}
