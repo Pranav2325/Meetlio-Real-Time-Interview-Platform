@@ -6,6 +6,8 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ProblemDescription from "../components/ProblemDescription.jsx";
 import CodeEditor from "../components/CodeEditor.jsx";
 import OutputPanel from "../components/OutputPanel.jsx";
+import { executeCode } from "../lib/piston.js";
+import toast from "react-hot-toast";
 
 const ProblemPage = () => {
   const { id } = useParams();
@@ -27,13 +29,79 @@ const ProblemPage = () => {
     }
   }, [id, selectedLanguage]);
 
-  const handleLanguageChange = (e) => {};
+  const handleLanguageChange = (e) => {
+    const newLang = e.target.value;
+    setSelectedLanguage(newLang);
+    setCode(currentProblem.starterCode[newLang]);
+    setOutput(null);
+  };
   const handleProblemChange = (newProblemId) => {
     navigate(`/problem/${newProblemId}`);
   };
   const triggerConfetti = () => {};
-  const checkIfTestsPassed = () => {};
-  const handleRunCode = () => {};
+
+  const normalizeOutput = (output) => {
+    return output
+      .trim()
+      .split("\n")
+      .map((line) =>
+        line
+          .trim()
+          .replace(/\[\s+/g, "[")
+          .replace(/\s+\]/g, "]")
+          .replace(/\s*,\s*/g, ","),
+      )
+      .filter((line) => line.length > 0)
+      .join("\n");
+  };
+
+  const checkIfTestsPassed = (actualOutput, expectedOutput) => {
+    const normalizedActual=normalizeOutput(actualOutput)
+    const normalizedExpected=normalizeOutput(expectedOutput)
+
+    return normalizedActual==normalizedExpected
+  };
+  
+  const handleRunCode = async () => {
+  toast.dismiss(); // clear old toasts
+
+  setIsRunning(true);
+  setOutput(null);
+
+  const loadingToast = toast.loading("Running code...");
+
+  try {
+    const result = await executeCode(selectedLanguage, code);
+
+    setOutput(result);
+    setIsRunning(false);
+    toast.dismiss(loadingToast);
+
+    if (!result.success) {
+      toast.error(result.error || "Execution failed");
+      return;
+    }
+
+    const expectedOutput =
+      currentProblem.expectedOutput[selectedLanguage];
+
+    const testPassed = checkIfTestsPassed(
+      result.output,
+      expectedOutput
+    );
+
+    if (testPassed) {
+      toast.success("All tests passed! Great job! 🎉");
+    } else {
+      toast.error("Tests failed. Check your output.");
+    }
+  } catch (err) {
+    setIsRunning(false);
+    toast.dismiss(loadingToast);
+    toast.error("Something went wrong while running the code.");
+  }
+};
+
   return (
     <div className="h-screen  bg-base-100 flex flex-col ">
       <NavBar />

@@ -20,6 +20,7 @@
     "inngest": "^3.50.0",
     "meetlio-real-time-interview-platform": "file:..",
     "mongoose": "^9.1.5",
+    "node-fetch": "^3.3.2",
     "stream-chat": "^9.31.0"
   },
   "devDependencies": {
