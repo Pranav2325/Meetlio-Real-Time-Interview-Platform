@@ -1,4 +1,4 @@
-const PISTON_API = "https://emkc.org/api/v2/piston";
+const PISTON_API = "http://localhost:3000/api";
 
 const LANGUAGE_VERSIONS = {
   javascript: { language: "javascript", version: "18.12.0" },
@@ -39,7 +39,7 @@ export async function executeCode(language, code) {
     if (!response.ok) {
       return {
         success: false,
-        error: `HTTP error! status ${response.data}`,
+        error: `HTTP error! status ${response.status}`,
       };
     }
     const data = await response.json();

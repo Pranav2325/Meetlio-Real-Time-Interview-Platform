@@ -38,7 +38,18 @@ const ProblemPage = () => {
   const handleProblemChange = (newProblemId) => {
     navigate(`/problem/${newProblemId}`);
   };
-  const triggerConfetti = () => {};
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 80,
+      spread: 250,
+      origin: { x: 0.2, y: 0.6 },
+    });
+    confetti({
+      particleCount: 80,
+      spread: 250,
+      origin: { x: 0.8, y: 0.6 },
+    });
+  };
 
   const normalizeOutput = (output) => {
     return output
@@ -56,51 +67,48 @@ const ProblemPage = () => {
   };
 
   const checkIfTestsPassed = (actualOutput, expectedOutput) => {
-    const normalizedActual=normalizeOutput(actualOutput)
-    const normalizedExpected=normalizeOutput(expectedOutput)
+    const normalizedActual = normalizeOutput(actualOutput);
+    const normalizedExpected = normalizeOutput(expectedOutput);
 
-    return normalizedActual==normalizedExpected
+    return normalizedActual == normalizedExpected;
   };
-  
+
   const handleRunCode = async () => {
-  toast.dismiss(); // clear old toasts
+    toast.dismiss(); // clear old toasts
 
-  setIsRunning(true);
-  setOutput(null);
+    setIsRunning(true);
+    setOutput(null);
 
-  const loadingToast = toast.loading("Running code...");
+    const loadingToast = toast.loading("Running code...");
 
-  try {
-    const result = await executeCode(selectedLanguage, code);
+    try {
+      const result = await executeCode(selectedLanguage, code);
 
-    setOutput(result);
-    setIsRunning(false);
-    toast.dismiss(loadingToast);
+      setOutput(result);
+      setIsRunning(false);
+      toast.dismiss(loadingToast);
 
-    if (!result.success) {
-      toast.error(result.error || "Execution failed");
-      return;
+      if (!result.success) {
+        toast.error(result.error || "Execution failed");
+        return;
+      }
+
+      const expectedOutput = currentProblem.expectedOutput[selectedLanguage];
+
+      const testPassed = checkIfTestsPassed(result.output, expectedOutput);
+
+      if (testPassed) {
+        triggerConfetti()
+        toast.success("All tests passed! Great job! 🎉");
+      } else {
+        toast.error("Tests failed. Check your output.");
+      }
+    } catch (err) {
+      setIsRunning(false);
+      toast.dismiss(loadingToast);
+      toast.error("Something went wrong while running the code.");
     }
-
-    const expectedOutput =
-      currentProblem.expectedOutput[selectedLanguage];
-
-    const testPassed = checkIfTestsPassed(
-      result.output,
-      expectedOutput
-    );
-
-    if (testPassed) {
-      toast.success("All tests passed! Great job! 🎉");
-    } else {
-      toast.error("Tests failed. Check your output.");
-    }
-  } catch (err) {
-    setIsRunning(false);
-    toast.dismiss(loadingToast);
-    toast.error("Something went wrong while running the code.");
-  }
-};
+  };
 
   return (
     <div className="h-screen  bg-base-100 flex flex-col ">
@@ -135,7 +143,7 @@ const ProblemPage = () => {
               <PanelResizeHandle className="h-2 bg-base-300 hover:bg-primary transition-colors cursor-row-resize" />
               {/* bottom pannel */}
               <Panel defaultSize={30} minSize={30}>
-                <OutputPanel />
+                <OutputPanel output={output}/>
               </Panel>
             </PanelGroup>
           </Panel>

@@ -10,6 +10,8 @@ import { protectRoute } from "./middlewares/protectRoute.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 
+import fetch from "node-fetch";
+
 const app = express();
 
 const __dirname = path.resolve();
@@ -19,6 +21,31 @@ app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware());
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
+
+app.post("/api/execute", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://emkc.org/api/v2/piston/execute",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req.body),
+      }
+    );
+
+    const data = await response.json();
+    console.log("PISTON RESPONSE:", data);
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json({
+      error: "Execution failed",
+      details: error.message,
+    });
+  }
+});
 
 app.use("/api/chat",chatRoutes)
 app.use("/api/sessions",sessionRoutes)
